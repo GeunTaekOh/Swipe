@@ -1,5 +1,6 @@
 package com.taek_aaa.swipe;
 
+import android.app.KeyguardManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,24 +12,27 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements  SensorEventListener {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     public static Boolean isStart = false;
-    Button startBtn;
     Sensor sensor;
     SensorManager sensorManager;
     PowerManager.WakeLock wakeLock;
     DevicePolicyManager devicePolicyManager;
+    SwitchCompat sensorSwitch;
+    Boolean isWakeup=false;
 
 
     @Override
@@ -47,16 +51,34 @@ public class MainActivity extends AppCompatActivity implements  SensorEventListe
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().setStatusBarColor(getResources().getColor(R.color.headColor));
         }
+
+
+        sensorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG)
+                            .setAction("ACTION", null).show();
+                    buttonClickTimeStart();
+
+                } else {
+                    Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG)
+                            .setAction("ACTION", null).show();
+                    buttonClickTimeStop();
+                }
+            }
+        });
+
     }
 
     protected void init() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        startBtn = (Button) findViewById(R.id.startBtn);
-        drawBtnText();
+        sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
+        sensorSwitch.setChecked(false);
     }
 
-    protected void getAuthority(){
+    protected void getAuthority() {
         devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
         ComponentName componentName = new ComponentName(getApplicationContext(), MainActivity.class);
         if (!devicePolicyManager.isAdminActive(componentName)) {
@@ -100,33 +122,6 @@ public class MainActivity extends AppCompatActivity implements  SensorEventListe
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-
-    public void onClickStartBtn(View v) {
-        String msg = "";
-        Intent swipeIntent = new Intent(MainActivity.this, SwipeSensorService.class);
-        //startService(swipeIntent);
-
-
-        isStart = !isStart;
-        drawBtnText();
-        if (isStart) {
-            msg = "Swipe를 실행합니다.";
-            buttonClickTimeStart();
-        } else {
-            msg = "Swipe를 종료합니다.";
-            buttonClickTimeStop();
-        }
-        Toast.makeText(this, "" + msg, Toast.LENGTH_SHORT).show();
-    }
-
-    protected void drawBtnText() {
-        if (isStart) {
-            startBtn.setText("Stop");
-        } else {
-            startBtn.setText("Start");
-        }
-    }
 
     protected void startSensor() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -146,18 +141,37 @@ public class MainActivity extends AppCompatActivity implements  SensorEventListe
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
-                    //센서가까울떄
+                //센서가까울떄
 
                 Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
                 ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
 
+                devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
                 if (!devicePolicyManager.isAdminActive(comp)) {
                     Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                     intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
                     intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
                     startActivityForResult(intent, 101);
+                    Log.e("test","device에서안됨");
                 } else {
-                    devicePolicyManager.lockNow();
+                    Log.e("test","else들어옴");
+                    KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+                    Log.e("test","else아래들어옴");
+                    if (!isWakeup && keyguardManager.inKeyguardRestrictedInputMode()) {
+                        // lock screen
+                        acquireWakeLock(this);
+                        isWakeup=true;
+                        Log.e("test","화면킴");
+
+                    } else {
+                        // lock screen 이 아님
+                        devicePolicyManager.lockNow();
+                        devicePolicyManager=null;
+                        isWakeup=false;
+                        Log.e("test","화면끔");
+                    }
+
+
                 }
             } else if (sensorEvent.values[0] <= -0.01 || sensorEvent.values[0] >= 0.01) {
                 //멀어젔을떄
