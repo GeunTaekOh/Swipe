@@ -13,15 +13,14 @@ import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.Toast;
+
+import static com.taek_aaa.swipe.MainActivity.devicePolicyManager;
+import static com.taek_aaa.swipe.MainActivity.sensor;
+import static com.taek_aaa.swipe.MainActivity.sensorManager;
+import static com.taek_aaa.swipe.MainActivity.wakeLock;
 
 public class SwipeSensorService extends Service implements SensorEventListener {
 
-    public static Boolean isStart = false;
-    Sensor sensor;
-    SensorManager sensorManager;
-    PowerManager.WakeLock wakeLock;
-    DevicePolicyManager devicePolicyManager;
     Boolean isWakeup = false;
     SensorEvent event;
 
@@ -68,8 +67,6 @@ public class SwipeSensorService extends Service implements SensorEventListener {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
                 //센서가까울떄
-
-                Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
                 ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
 
                 devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -97,22 +94,17 @@ public class SwipeSensorService extends Service implements SensorEventListener {
                 }
             } else if (sensorEvent.values[0] <= -0.01 || sensorEvent.values[0] >= 0.01) {
                 //멀어젔을떄
-                Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
             }
-
         }
-
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
-
     private void acquireWakeLock(Context context) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, context.getClass().getName());
-
         if (wakeLock != null) {
             wakeLock.acquire();
         }

@@ -21,14 +21,12 @@ import android.widget.CompoundButton;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static Boolean isStart = false;
-    Sensor sensor;
-    SensorManager sensorManager;
-    PowerManager.WakeLock wakeLock;
-    DevicePolicyManager devicePolicyManager;
-    SwitchCompat sensorSwitch;
-    Boolean isWakeup=false;
-
+    public static Sensor sensor;
+    public static SensorManager sensorManager;
+    public static PowerManager.WakeLock wakeLock;
+    public static DevicePolicyManager devicePolicyManager;
+    public static SwitchCompat sensorSwitch;
+    DataController dataController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +51,14 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG)
                             .setAction("ACTION", null).show();
                     Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
+                    dataController.setPreferencesIsStart(getBaseContext(),1);
                     startService(timerIntent);
 
                 } else {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG)
                             .setAction("ACTION", null).show();
                     Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
+                    dataController.setPreferencesIsStart(getBaseContext(),0);
                     stopService(timerIntent);
                 }
             }
@@ -66,11 +66,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStart(){
+        super.onStart();
+        if(sensorSwitch.isChecked()==false){
+            sensor = null;
+            sensorManager=null;
+        }
+    }
     protected void init() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        dataController = new DataController();
+
+
         sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
-        sensorSwitch.setChecked(false);
+        if(dataController.getPreferencesIsStart(getBaseContext())==0) {
+            sensorSwitch.setChecked(false);
+        }else{
+            sensorSwitch.setChecked(true);
+        }
 
     }
 
@@ -114,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -122,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
     protected void startSensor() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-
     }
 
     private void acquireWakeLock(Context context) {
