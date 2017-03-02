@@ -152,11 +152,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
                     intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
                     startActivityForResult(intent, 101);
-                    Log.e("test","device에서안됨");
                 } else {
-                    Log.e("test","else들어옴");
+
                     KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-                    Log.e("test","else아래들어옴");
                     if (!isWakeup && keyguardManager.inKeyguardRestrictedInputMode()) {
                         // lock screen
                         acquireWakeLock(this);
