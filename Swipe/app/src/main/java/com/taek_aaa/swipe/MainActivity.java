@@ -1,13 +1,10 @@
 package com.taek_aaa.swipe;
 
-import android.app.KeyguardManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,13 +15,11 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
-import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity {
 
     public static Boolean isStart = false;
     Sensor sensor;
@@ -42,8 +37,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         init();
 
-        startSensor();
-
         //권한 받아오기
         getAuthority();
 
@@ -51,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().setStatusBarColor(getResources().getColor(R.color.headColor));
         }
-
+        startSensor();
 
         sensorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -59,12 +52,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (isChecked) {
                     Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG)
                             .setAction("ACTION", null).show();
-                    buttonClickTimeStart();
+                    Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
+                    startService(timerIntent);
 
                 } else {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG)
                             .setAction("ACTION", null).show();
-                    buttonClickTimeStop();
+                    Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
+                    stopService(timerIntent);
                 }
             }
         });
@@ -76,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setSupportActionBar(toolbar);
         sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
         sensorSwitch.setChecked(false);
+
     }
 
     protected void getAuthority() {
@@ -126,61 +122,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void startSensor() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-    }
-
-    public void buttonClickTimeStart() {
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
-    }
-
-    public void buttonClickTimeStop() {
-        //센서 값이 필요하지 않는 시점에 리스너를 해제해준다.
-        sensorManager.unregisterListener(this);
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-            if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
-                //센서가까울떄
-
-                Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
-                ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
-
-                devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
-                if (!devicePolicyManager.isAdminActive(comp)) {
-                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
-                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
-                    startActivityForResult(intent, 101);
-                } else {
-
-                    KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-                    if (!isWakeup && keyguardManager.inKeyguardRestrictedInputMode()) {
-                        // lock screen
-                        acquireWakeLock(this);
-                        isWakeup=true;
-                        Log.e("test","화면킴");
-
-                    } else {
-                        // lock screen 이 아님
-                        devicePolicyManager.lockNow();
-                        devicePolicyManager=null;
-                        isWakeup=false;
-                        Log.e("test","화면끔");
-                    }
-
-
-                }
-            } else if (sensorEvent.values[0] <= -0.01 || sensorEvent.values[0] >= 0.01) {
-                //멀어젔을떄
-                Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
-            }
-
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
 

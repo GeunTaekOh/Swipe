@@ -1,17 +1,29 @@
 package com.taek_aaa.swipe;
 
+import android.app.KeyguardManager;
 import android.app.Service;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.util.Log;
+import android.widget.Toast;
 
-import static com.taek_aaa.swipe.MainActivity.isStart;
+public class SwipeSensorService extends Service implements SensorEventListener {
 
-public class SwipeSensorService extends Service {
-
-    SensorManager sensorManager;
+    public static Boolean isStart = false;
     Sensor sensor;
+    SensorManager sensorManager;
+    PowerManager.WakeLock wakeLock;
+    DevicePolicyManager devicePolicyManager;
+    Boolean isWakeup = false;
+    SensorEvent event;
 
     public SwipeSensorService() {
     }
@@ -23,48 +35,86 @@ public class SwipeSensorService extends Service {
     }
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
-
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
     }
+
     @Override
     public void onDestroy() {
-        //  Log.e("dhrms", "destroy");
+        buttonClickTimeStop();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (isStart) {
-                    try {
-
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-
-                    }
-                }
-            }
-        });
-        thread.start();
+        buttonClickTimeStart();
         return START_STICKY;
     }
-/*
-    protected void startSensor(){
-        sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        //Sensormanager를 이용해서 근접 센서 객체를 얻는다.
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
-
-    }
-    public void buttonClickTimeStart(){
+    public void buttonClickTimeStart() {
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
     }
 
-    public void buttonClickTimeStop(){
+    public void buttonClickTimeStop() {
         //센서 값이 필요하지 않는 시점에 리스너를 해제해준다.
         sensorManager.unregisterListener(this);
-    }*/
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        this.event = sensorEvent;
+
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+            if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
+                //센서가까울떄
+
+                Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
+                ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
+
+                devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+                if (!devicePolicyManager.isAdminActive(comp)) {
+                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
+                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
+                    startActivity(intent);
+                } else {
+
+                    KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+                    if (!isWakeup && keyguardManager.inKeyguardRestrictedInputMode()) {
+                        // lock screen
+                        acquireWakeLock(this);
+                        isWakeup = true;
+                        Log.e("test", "화면킴");
+
+                    } else {
+                        // lock screen 이 아님
+                        devicePolicyManager.lockNow();
+                        devicePolicyManager = null;
+                        isWakeup = false;
+                        Log.e("test", "화면끔");
+                    }
+                }
+            } else if (sensorEvent.values[0] <= -0.01 || sensorEvent.values[0] >= 0.01) {
+                //멀어젔을떄
+                Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
+            }
+
+        }
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    private void acquireWakeLock(Context context) {
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, context.getClass().getName());
+
+        if (wakeLock != null) {
+            wakeLock.acquire();
+        }
+    }
 }
