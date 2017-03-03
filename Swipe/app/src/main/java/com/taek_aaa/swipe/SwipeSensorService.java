@@ -13,6 +13,8 @@ import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Toast;
 
 import com.taek_aaa.swipe.controller.DataController;
@@ -23,13 +25,15 @@ import static com.taek_aaa.swipe.view.MainActivity.sensor;
 import static com.taek_aaa.swipe.view.MainActivity.sensorManager;
 import static com.taek_aaa.swipe.view.MainActivity.wakeLock;
 
-public class SwipeSensorService extends Service implements SensorEventListener {
+public class SwipeSensorService extends Service implements SensorEventListener, View.OnTouchListener {
 
     Boolean isWakeup = false;
     SensorEvent event;
     DataController dataController;
     Context mContext;
-
+    Boolean isFirstLock=false;
+    Boolean isTouched=false;
+    Thread thread;
     public SwipeSensorService() {
     }
 
@@ -60,13 +64,16 @@ public class SwipeSensorService extends Service implements SensorEventListener {
         buttonClickTimeStart();
         devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
 
-        Thread thread = new Thread(new Runnable() {
+        thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
                     try {
                         if (isWakeup) {
                             Thread.sleep(1000*15);
+                            if(isTouched){
+                                thread.interrupt();
+                            }
                             devicePolicyManager.lockNow();
                             devicePolicyManager = null;
                             isWakeup = false;
@@ -122,6 +129,7 @@ public class SwipeSensorService extends Service implements SensorEventListener {
                         devicePolicyManager.lockNow();
                         devicePolicyManager = null;
                         isWakeup = false;
+                        isFirstLock=true;
                         Log.e("test", "화면끔");
                     }
                 }
@@ -144,4 +152,9 @@ public class SwipeSensorService extends Service implements SensorEventListener {
         }
     }
 
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        this.isTouched=true;
+        return false;
+    }
 }
