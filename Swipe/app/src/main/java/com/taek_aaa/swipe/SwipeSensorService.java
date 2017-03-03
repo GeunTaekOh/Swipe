@@ -73,6 +73,7 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
                             Thread.sleep(1000*15);
                             if(isTouched){
                                 thread.interrupt();
+                                isTouched=false;
                             }
                             devicePolicyManager.lockNow();
                             devicePolicyManager = null;
