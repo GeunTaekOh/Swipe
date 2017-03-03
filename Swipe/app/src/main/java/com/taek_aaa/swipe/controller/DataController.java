@@ -1,7 +1,8 @@
-package com.taek_aaa.swipe;
+package com.taek_aaa.swipe.controller;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 /**
@@ -25,6 +26,12 @@ public class DataController extends Activity{
         SharedPreferences.Editor editor = pref.edit();
         editor.putInt("isStart", a);
         editor.commit();
+    }
+    public void intentAutority(Intent intent){
+
+        startActivityForResult(intent, 0);
+
+        //startActivity(intent);
     }
 
 }

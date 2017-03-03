@@ -1,4 +1,4 @@
-package com.taek_aaa.swipe;
+package com.taek_aaa.swipe.view;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -19,6 +19,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 
+import com.taek_aaa.swipe.R;
+import com.taek_aaa.swipe.SwipeSensorService;
+import com.taek_aaa.swipe.controller.DataController;
+import com.taek_aaa.swipe.controller.ShutdownAdminReceiver;
+
+import static com.taek_aaa.swipe.R.color.headColor;
+
 public class MainActivity extends AppCompatActivity {
 
     public static Sensor sensor;
@@ -26,39 +33,46 @@ public class MainActivity extends AppCompatActivity {
     public static PowerManager.WakeLock wakeLock;
     public static DevicePolicyManager devicePolicyManager;
     public static SwitchCompat sensorSwitch;
+    public static int headColorThem;
     DataController dataController;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        init();
-
-        //권한 받아오기
+        headColorThem = getResources().getColor(headColor);
         getAuthority();
+        init();
 
         //맨위상태바색상변경
         if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().setStatusBarColor(getResources().getColor(R.color.headColor));
+            getWindow().setStatusBarColor(headColorThem);
         }
         startSensor();
+        ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
+
+        devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if (!devicePolicyManager.isAdminActive(comp)) {
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
+            startActivityForResult(intent, 101);
+        }
 
         sensorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG)
-                            .setAction("ACTION", null).show();
-                    Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
-                    dataController.setPreferencesIsStart(getBaseContext(),1);
-                    startService(timerIntent);
+                Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
 
+                if (isChecked) {
+                    Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
+                    dataController.setPreferencesIsStart(getBaseContext(), 1);
+                    startService(timerIntent);
                 } else {
-                    Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG)
-                            .setAction("ACTION", null).show();
-                    Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
-                    dataController.setPreferencesIsStart(getBaseContext(),0);
+                    Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
+                    dataController.setPreferencesIsStart(getBaseContext(), 0);
                     stopService(timerIntent);
                 }
             }
@@ -67,26 +81,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart(){
+    protected void onStart() {
         super.onStart();
-        if(sensorSwitch.isChecked()==false){
-            sensor = null;
-            sensorManager=null;
+
+        switch (dataController.getPreferencesIsStart(getBaseContext())) {
+            case 0:
+                sensorSwitch.setChecked(false);
+                break;
+            case 1:
+                sensorSwitch.setChecked(true);
+                break;
         }
+
     }
+
     protected void init() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         dataController = new DataController();
-
-
         sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
-        if(dataController.getPreferencesIsStart(getBaseContext())==0) {
-            sensorSwitch.setChecked(false);
-        }else{
-            sensorSwitch.setChecked(true);
-        }
 
+        switch (dataController.getPreferencesIsStart(getBaseContext())) {
+            case 0:
+                sensorSwitch.setChecked(false);
+                break;
+            case 1:
+                sensorSwitch.setChecked(true);
+                break;
+        }
     }
 
     protected void getAuthority() {
@@ -113,21 +135,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingActivity.class));
+                break;
+            case R.id.howToUse:
+
+                break;
+            case R.id.contactUs:
+                ContactUsDialog contactUsDialog = new ContactUsDialog(this);
+                contactUsDialog.show();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -146,5 +171,4 @@ public class MainActivity extends AppCompatActivity {
             wakeLock.acquire();
         }
     }
-
 }

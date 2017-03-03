@@ -1,4 +1,4 @@
-package com.taek_aaa.swipe;
+package com.taek_aaa.swipe.controller;
 
 import android.app.admin.DeviceAdminReceiver;
 import android.content.Context;

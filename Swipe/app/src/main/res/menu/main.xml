@@ -4,6 +4,20 @@
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="환경 설정"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/howToUse"
+        android:orderInCategory="101"
+        android:title="사용 설명서"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/contactUs"
+        android:orderInCategory="102"
+        android:title="개발자와 연락"
+        app:showAsAction="never"/>
+
+
 </menu>
