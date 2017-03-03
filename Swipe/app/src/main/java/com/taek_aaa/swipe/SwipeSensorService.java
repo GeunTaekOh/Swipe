@@ -34,6 +34,8 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
     Boolean isFirstLock=false;
     Boolean isTouched=false;
     Thread thread;
+    MotionEvent mEvent;
+
     public SwipeSensorService() {
     }
 
@@ -71,9 +73,11 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
                     try {
                         if (isWakeup) {
                             Thread.sleep(1000*15);
-                            if(isTouched){
+                            if(mEvent.getAction()==MotionEvent.ACTION_DOWN){
                                 thread.interrupt();
                                 isTouched=false;
+
+
                             }
                             devicePolicyManager.lockNow();
                             devicePolicyManager = null;
@@ -154,8 +158,12 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public boolean onTouch(View view, MotionEvent event) {
         this.isTouched=true;
+        this.mEvent = event;
+        Log.e("test","onTouch 들어옴");
+        Log.e("test","onTouch : "+view.getId());
+        Log.e("test","Motion : " + event);
         return false;
     }
 }
