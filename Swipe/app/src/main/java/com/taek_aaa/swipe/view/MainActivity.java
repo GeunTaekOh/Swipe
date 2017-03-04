@@ -1,5 +1,7 @@
 package com.taek_aaa.swipe.view;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -22,6 +24,7 @@ import android.widget.CompoundButton;
 import com.taek_aaa.swipe.R;
 import com.taek_aaa.swipe.SwipeSensorService;
 import com.taek_aaa.swipe.controller.DataController;
+import com.taek_aaa.swipe.controller.NotificationController;
 import com.taek_aaa.swipe.controller.ShutdownAdminReceiver;
 
 import static com.taek_aaa.swipe.R.color.headColor;
@@ -35,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     public static SwitchCompat sensorSwitch;
     public static int headColorThem;
     DataController dataController;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +115,10 @@ public class MainActivity extends AppCompatActivity {
                 if (isChecked) {
                     Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
                     dataController.setPreferencesIsStart(getBaseContext(), 1);
+                    NotificationController notificationController = new NotificationController();
+                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    Notification.Builder builder = new Notification.Builder(getApplicationContext());
+                    notificationController.startNotification(nm, builder);
                     startService(timerIntent);
                 } else {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();

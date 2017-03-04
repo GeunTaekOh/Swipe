@@ -111,7 +111,6 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         this.event = sensorEvent;
-
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
                 //센서가까울떄
