@@ -10,7 +10,6 @@ import android.widget.Toast;
  */
 
 public class ShutdownAdminReceiver extends DeviceAdminReceiver {
-
     @Override
     public void onDisabled(Context context, Intent intent) {
         super.onEnabled(context, intent);
@@ -22,5 +21,4 @@ public class ShutdownAdminReceiver extends DeviceAdminReceiver {
         super.onDisabled(context, intent);
         Toast.makeText(context, "관리자 권한을 받았습니다.", Toast.LENGTH_SHORT).show();
     }
-
 }

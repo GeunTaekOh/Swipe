@@ -18,11 +18,13 @@ public class ContactUsDialog extends Dialog implements View.OnClickListener{
     public ContactUsDialog(Context context) {
         super(context);
         this.globalContext = context;
-        setContentView(R.layout.dialog_contactus);
+        init();
+    }
 
+    protected void init(){
+        setContentView(R.layout.dialog_contactus);
         findViewById(R.id.contactExitbtn).setOnClickListener(this);
         findViewById(R.id.mailBtn).setOnClickListener(this);
-
     }
 
     @Override

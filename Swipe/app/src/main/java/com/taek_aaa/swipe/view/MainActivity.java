@@ -36,92 +36,16 @@ public class MainActivity extends AppCompatActivity {
     public static int headColorThem;
     DataController dataController;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        headColorThem = getResources().getColor(headColor);
         getAuthority();
         init();
-
-        //맨위상태바색상변경
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().setStatusBarColor(headColorThem);
-        }
+        drawWindowTheme();
         startSensor();
-        ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
-
-        devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
-        if (!devicePolicyManager.isAdminActive(comp)) {
-            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
-            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
-            startActivityForResult(intent, 101);
-        }
-
-        sensorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
-
-                if (isChecked) {
-                    Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
-                    dataController.setPreferencesIsStart(getBaseContext(), 1);
-                    startService(timerIntent);
-                } else {
-                    Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
-                    dataController.setPreferencesIsStart(getBaseContext(), 0);
-                    stopService(timerIntent);
-                }
-            }
-        });
-
+        registSensorListener();
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        switch (dataController.getPreferencesIsStart(getBaseContext())) {
-            case 0:
-                sensorSwitch.setChecked(false);
-                break;
-            case 1:
-                sensorSwitch.setChecked(true);
-                break;
-        }
-
-    }
-
-    protected void init() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        dataController = new DataController();
-        sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
-
-        switch (dataController.getPreferencesIsStart(getBaseContext())) {
-            case 0:
-                sensorSwitch.setChecked(false);
-                break;
-            case 1:
-                sensorSwitch.setChecked(true);
-                break;
-        }
-    }
-
-    protected void getAuthority() {
-        devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
-        ComponentName componentName = new ComponentName(getApplicationContext(), MainActivity.class);
-        if (!devicePolicyManager.isAdminActive(componentName)) {
-            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
-            startActivityForResult(intent, 0);
-        }
-        acquireWakeLock(this);
-    }
-
 
     @Override
     public void onBackPressed() {
@@ -158,17 +82,79 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    protected void startSensor() {
+    @Override
+    protected void onStart() {
+        super.onStart();
+        switch (dataController.getPreferencesIsStart(getBaseContext())) {
+            case 0:
+                sensorSwitch.setChecked(false);
+                break;
+            case 1:
+                sensorSwitch.setChecked(true);
+                break;
+        }
+    }
+
+    private void drawWindowTheme() {
+        if (Build.VERSION.SDK_INT >= 21) {
+            getWindow().setStatusBarColor(headColorThem);
+        }
+    }
+
+    private void registSensorListener() {
+
+        sensorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Intent timerIntent = new Intent(MainActivity.this, SwipeSensorService.class);
+
+                if (isChecked) {
+                    Snackbar.make(buttonView, "Swipe를 실행합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
+                    dataController.setPreferencesIsStart(getBaseContext(), 1);
+                    startService(timerIntent);
+                } else {
+                    Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
+                    dataController.setPreferencesIsStart(getBaseContext(), 0);
+                    stopService(timerIntent);
+                }
+            }
+        });
+    }
+
+    private void init() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        dataController = new DataController();
+        sensorSwitch = (SwitchCompat) findViewById(R.id.switchButton);
+        headColorThem = getResources().getColor(headColor);
+        drawSensorChecked();
+    }
+
+    private void drawSensorChecked() {
+        switch (dataController.getPreferencesIsStart(getBaseContext())) {
+            case 0:
+                sensorSwitch.setChecked(false);
+                break;
+            case 1:
+                sensorSwitch.setChecked(true);
+                break;
+        }
+    }
+
+    private void getAuthority() {
+        ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
+        devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if (!devicePolicyManager.isAdminActive(comp)) {
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, comp);
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "message string");
+            startActivityForResult(intent, 101);
+        }
+    }
+
+    private void startSensor() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
     }
 
-    private void acquireWakeLock(Context context) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, context.getClass().getName());
-
-        if (wakeLock != null) {
-            wakeLock.acquire();
-        }
-    }
 }

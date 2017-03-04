@@ -57,15 +57,13 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
 
     @Override
     public void onDestroy() {
-        buttonClickTimeStop();
-
+        stopGetSensor();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        buttonClickTimeStart();
+        startGetSensor();
         devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
-
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -76,8 +74,6 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
                             if(mEvent.getAction()==MotionEvent.ACTION_DOWN){
                                 thread.interrupt();
                                 isTouched=false;
-
-
                             }
                             devicePolicyManager.lockNow();
                             devicePolicyManager = null;
@@ -91,22 +87,25 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
             }
         });
         thread.start();
-
-
         return START_STICKY;
-
-
     }
 
-    public void buttonClickTimeStart() {
+    public void startGetSensor() {
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
         dataController.setPreferencesIsStart(this, 1);
     }
 
-    public void buttonClickTimeStop() {
-        //센서 값이 필요하지 않는 시점에 리스너를 해제해준다.
+    public void stopGetSensor() {
         sensorManager.unregisterListener(this);
         dataController.setPreferencesIsStart(this, 0);
+    }
+
+    private void acquireWakeLock(Context context) {
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, context.getClass().getName());
+        if (wakeLock != null) {
+            wakeLock.acquire();
+        }
     }
 
     @Override
@@ -117,24 +116,19 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
             if (sensorEvent.values[0] >= -0.01 && sensorEvent.values[0] <= 0.01) {
                 //센서가까울떄
                 ComponentName comp = new ComponentName(this, ShutdownAdminReceiver.class);
-
                 devicePolicyManager = (DevicePolicyManager) getApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
                 if (!devicePolicyManager.isAdminActive(comp)) {
                     Toast.makeText(this, "권한이 없습니다. 메뉴에서 권한설정을 하세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
                     if (!isWakeup && keyguardManager.inKeyguardRestrictedInputMode()) {
-                        // lock screen
                         acquireWakeLock(this);
                         isWakeup = true;
                         Log.e("test", "화면킴");
 
                     } else {
-                        // lock screen 이 아님
                         devicePolicyManager.lockNow();
-                        devicePolicyManager = null;
-                        isWakeup = false;
-                        isFirstLock=true;
+                        freeData();
                         Log.e("test", "화면끔");
                     }
                 }
@@ -148,15 +142,6 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
-
-    private void acquireWakeLock(Context context) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, context.getClass().getName());
-        if (wakeLock != null) {
-            wakeLock.acquire();
-        }
-    }
-
     @Override
     public boolean onTouch(View view, MotionEvent event) {
         this.isTouched=true;
@@ -165,5 +150,11 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
         Log.e("test","onTouch : "+view.getId());
         Log.e("test","Motion : " + event);
         return false;
+    }
+
+    protected void freeData() {
+        devicePolicyManager = null;
+        isWakeup = false;
+        isFirstLock=true;
     }
 }
