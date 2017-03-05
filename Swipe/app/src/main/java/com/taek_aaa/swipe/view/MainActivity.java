@@ -2,6 +2,7 @@ package com.taek_aaa.swipe.view;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
+import android.widget.RemoteViews;
 
 import com.taek_aaa.swipe.R;
 import com.taek_aaa.swipe.SwipeSensorService;
@@ -118,13 +120,22 @@ public class MainActivity extends AppCompatActivity {
                     NotificationController notificationController = new NotificationController();
                     NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     Notification.Builder builder = new Notification.Builder(getApplicationContext());
-                    notificationController.startNotification(nm, builder);
+
+                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    PendingIntent pi = PendingIntent.getActivity(getBaseContext(), 0, intent, 0);
+                    RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.view_notification);
+
+
+                    notificationController.startNotification(nm, builder, pi,contentView);
                     startService(timerIntent);
                 } else {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
                     dataController.setPreferencesIsStart(getBaseContext(), 0);
                     stopService(timerIntent);
-                    NotificationController notificationController = new NotificationController();
+                    NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                    nm.cancel(1);
 
                 }
             }
