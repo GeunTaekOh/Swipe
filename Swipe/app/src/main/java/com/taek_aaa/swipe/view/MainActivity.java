@@ -124,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
                     dataController.setPreferencesIsStart(getBaseContext(), 0);
                     stopService(timerIntent);
+                    NotificationController notificationController = new NotificationController();
+
                 }
             }
         });
