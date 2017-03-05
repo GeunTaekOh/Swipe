@@ -51,6 +51,24 @@ public class MainActivity extends AppCompatActivity {
         drawWindowTheme();
         startSensor();
         registSensorListener();
+
+        /*LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = (View) inflater.inflate(R.layout.view_notification, null);
+        Button btn = (Button)v.findViewById(R.id.notiExitButton);
+
+
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.e("test","wow");
+            }
+        });*/
+
+
+
+
+
     }
 
     @Override
@@ -124,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(getBaseContext(), MainActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    PendingIntent pi = PendingIntent.getActivity(getBaseContext(), 0, intent, 0);
+                    PendingIntent pi = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                     RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.view_notification);
 
 
@@ -177,5 +195,6 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
     }
+
 
 }

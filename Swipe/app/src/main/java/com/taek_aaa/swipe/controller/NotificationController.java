@@ -23,6 +23,9 @@ public class NotificationController {
         contentView.setImageViewResource(R.id.image, R.drawable.icon2);
         contentView.setTextViewText(R.id.title, "Custom notification");
         contentView.setTextViewText(R.id.text, "This is a custom layout");
+        //contentView.setOnClickPendingIntent(R.id.notiExitButton, pi);
+
+
         builder.setSmallIcon(R.drawable.icon2);
         builder.setTicker("Sample");
         builder.setWhen(System.currentTimeMillis());
@@ -31,11 +34,18 @@ public class NotificationController {
         builder.setContentText("Swipe On/Off");
         builder.setContentIntent(pi);
         builder.setContent(contentView);
+
+      
+
         Notification noti = builder.build();
 
         noti.flags = noti.FLAG_NO_CLEAR;
         //noti.contentView = contentView;
         nm.notify(1, noti);
+
+
+
+
     }
 
     public NotificationManager getNotificationManager(){
