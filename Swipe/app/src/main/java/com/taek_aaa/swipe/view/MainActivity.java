@@ -64,9 +64,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("test","wow");
             }
         });*/
-
-
-
+        //NotificationController notificatioController = new NotificationController();
+        //notificationController.createDownloadNotification(getPackageName(), getSystemService(Context.NOTIFICATION_SERVICE),getBaseContext());
 
 
     }
@@ -146,13 +145,13 @@ public class MainActivity extends AppCompatActivity {
                     RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.view_notification);
 
 
-                    notificationController.startNotification(nm, builder, pi,contentView);
+                    notificationController.startNotification(nm, builder, pi, contentView, getBaseContext());
                     startService(timerIntent);
                 } else {
                     Snackbar.make(buttonView, "Swipe를 종료합니다.", Snackbar.LENGTH_LONG).setAction("ACTION", null).show();
                     dataController.setPreferencesIsStart(getBaseContext(), 0);
                     stopService(timerIntent);
-                    NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                    NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                     nm.cancel(1);
 
                 }
@@ -195,6 +194,5 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
     }
-
 
 }

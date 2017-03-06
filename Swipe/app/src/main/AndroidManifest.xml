@@ -24,6 +24,8 @@
         <activity android:name=".view.SettingActivity"/>
         <activity android:name=".controller.NotificationController"/>
 
+        <receiver android:name=".controller.NotificationController$switchButtonListener" />
+
         <service
             android:name=".SwipeSensorService"
             android:enabled="true"

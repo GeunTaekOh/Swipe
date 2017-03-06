@@ -156,4 +156,6 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
         isWakeup = false;
         isFirstLock=true;
     }
+
+
 }

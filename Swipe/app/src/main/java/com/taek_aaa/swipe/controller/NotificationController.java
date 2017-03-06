@@ -1,30 +1,46 @@
 package com.taek_aaa.swipe.controller;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.taek_aaa.swipe.R;
+import com.taek_aaa.swipe.view.MainActivity;
 
 /**
  * Created by taek_aaa on 2017. 3. 4..
  */
 
-public class NotificationController {
+public class NotificationController extends Activity {
     NotificationManager nm;
     Notification.Builder builder;
+    Button exitBtn;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.view_notification);
+        exitBtn = (Button) findViewById(R.id.notiExitButton);
+
+    }
 
 
-
-    public void startNotification(NotificationManager nm, Notification.Builder builder, PendingIntent pi, RemoteViews contentView){
+    public void startNotification(NotificationManager nm, Notification.Builder builder, PendingIntent pi, RemoteViews contentView, Context context) {
         this.nm = nm;
         this.builder = builder;
+
         contentView.setImageViewResource(R.id.image, R.drawable.icon2);
         contentView.setTextViewText(R.id.title, "Custom notification");
         contentView.setTextViewText(R.id.text, "This is a custom layout");
-        //contentView.setOnClickPendingIntent(R.id.notiExitButton, pi);
-
+        contentView.setOnClickPendingIntent(R.id.notiExitButton, getPendingIntent(context, R.id.notiExitButton));
 
         builder.setSmallIcon(R.drawable.icon2);
         builder.setTicker("Sample");
@@ -35,30 +51,31 @@ public class NotificationController {
         builder.setContentIntent(pi);
         builder.setContent(contentView);
 
-      
-
         Notification noti = builder.build();
 
         noti.flags = noti.FLAG_NO_CLEAR;
-        //noti.contentView = contentView;
+
+        Intent switchIntent = new Intent(context, switchButtonListener.class);
+        switchIntent.setAction(Intent.ACTION_SEND);
+        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, switchIntent, 0);
+        contentView.setOnClickPendingIntent(R.id.notiExitButton, pendingSwitchIntent);
+
         nm.notify(1, noti);
 
-
-
-
     }
 
-    public NotificationManager getNotificationManager(){
-        return this.nm;
+    private PendingIntent getPendingIntent(Context context, int id) {
+        Intent intent = new Intent(context, MainActivity.class);
+        return PendingIntent.getBroadcast(context, id, intent, 0);
     }
-    public Notification.Builder getBuilder(){
-        return this.builder;
-    }
-    public void setNotificationManager (NotificationManager nm){
-        this.nm = nm;
-    }
-    public void setBuilder(Notification.Builder builder){
-        this.builder = builder;
+
+
+    public static class switchButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context,"test",Toast.LENGTH_SHORT).show();
+
+        }
     }
 
 
