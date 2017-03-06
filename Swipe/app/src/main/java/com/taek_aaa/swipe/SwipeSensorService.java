@@ -99,6 +99,12 @@ public class SwipeSensorService extends Service implements SensorEventListener, 
         sensorManager.unregisterListener(this);
         dataController.setPreferencesIsStart(this, 0);
     }
+    public void stopGetSensorPublic(){
+        sensorManager.unregisterListener(this);
+        DataController dataController = new DataController();
+        dataController.setPreferencesIsStart(this,0);
+    }
+
 
     private void acquireWakeLock(Context context) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);

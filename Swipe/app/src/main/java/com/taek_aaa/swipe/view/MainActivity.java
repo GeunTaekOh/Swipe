@@ -52,22 +52,6 @@ public class MainActivity extends AppCompatActivity {
         startSensor();
         registSensorListener();
 
-        /*LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View v = (View) inflater.inflate(R.layout.view_notification, null);
-        Button btn = (Button)v.findViewById(R.id.notiExitButton);
-
-
-
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.e("test","wow");
-            }
-        });*/
-        //NotificationController notificatioController = new NotificationController();
-        //notificationController.createDownloadNotification(getPackageName(), getSystemService(Context.NOTIFICATION_SERVICE),getBaseContext());
-
-
     }
 
     @Override
